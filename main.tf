@@ -48,3 +48,53 @@ resource "vault_pki_secret_backend_config_urls" "this" {
 
   depends_on = [vault_mount.pki_root]
 }
+
+## Intermediate CA creation and configuration
+# Enable pki backends
+resource "vault_mount" "pki_intermediate" {
+  path                  = "pki_intermediate"
+  type                  = "pki"
+  description           = "PKI for Intermediate certificate"
+  max_lease_ttl_seconds = 31536000
+}
+
+# Creation of the Intermediate certificate (CSR and CA)
+resource "vault_pki_secret_backend_intermediate_cert_request" "this" {
+  backend     = vault_mount.pki_intermediate.path
+  type        = vault_pki_secret_backend_root_cert.this.type
+  common_name = "example.com Intermediate certificate"
+
+  depends_on = [vault_mount.pki_intermediate]
+}
+
+# Have the intermediate certificate signed by the Root CA
+resource "vault_pki_secret_backend_root_sign_intermediate" "this" {
+  backend              = vault_mount.pki_root.path
+  csr                  = sensitive(vault_pki_secret_backend_intermediate_cert_request.this.csr)
+  common_name          = "example.com Intermediate Certificate"
+  exclude_cn_from_sans = true
+  ou                   = "Technical Dept"
+  organization         = "My Organization"
+  country              = "France"
+  revoke               = true
+
+  depends_on = [vault_pki_secret_backend_intermediate_cert_request.this]
+}
+
+resource "vault_pki_secret_backend_intermediate_set_signed" "this" {
+  backend     = vault_mount.pki_intermediate.path
+  certificate = sensitive(vault_pki_secret_backend_root_sign_intermediate.this.certificate)
+
+  depends_on = [vault_pki_secret_backend_root_sign_intermediate.this]
+}
+
+# Creation of a role for generating final certificates
+resource "vault_pki_secret_backend_role" "inter-role" {
+  backend          = vault_mount.pki_intermediate.path
+  name             = "role-cert"
+  allowed_domains  = ["example.com"]
+  allow_subdomains = true
+  ttl              = 120
+  max_ttl          = 6000
+  generate_lease   = true
+}
