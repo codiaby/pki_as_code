@@ -44,7 +44,7 @@ Now download keys or copy and store keys
 
 4. Copy `vault_url` and `vault_token` into `terraform.tfvars`
 
-```json
+```
 vault_addr  = "http://127.0.0.1:8200"
 vault_token = "XXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
@@ -53,4 +53,23 @@ vault_token = "XXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 ```shell
 terraform init && terraform plan && terraform apply
+```
+
+## Run Lab (consul-template and webserver)
+
+Consul-template is an agent which allows you to automatically generate certificates on the servers and in the folders then launch a command such as restarting the service.
+this tool must be installed on the server for the generation of the certificate. For more info [consul-template](https://github.com/hashicorp/consul-template)
+
+Add also `vault_token` into `config/consul-template/consul_template.hcl`
+
+```hcl
+  # This value can also be specified via the environment variable VAULT_TOKEN.
+  # I am using the admin token created earlier
+  token        = "XXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+## Launch your PKI
+
+```shell
+docker compose up -d
 ```

@@ -32,4 +32,6 @@ override.tf.json
 terraform.rc
 .terraform.lock.hcl
 
+# Ignore some files
+config/nginx/ssl/*.pem
 data/*

@@ -12,3 +12,23 @@ services:
     volumes:
       - ./config/vault/config/vault-server.hcl:/vault/config/vault-server.hcl
       - ./data:/vault-data
+
+  consul-template:
+    image: hashicorp/consul-template
+    user: root
+    volumes:
+      - ./config/consul-template:/opt/consul/templates
+      - ./config/nginx/ssl:/opt/consul/ssl
+    command: sh -c 'consul-template -config="/opt/consul/templates/consul_template.hcl"'
+    depends_on:
+      - vault
+
+  webserver:
+    image: nginx
+    ports:
+      - '443:443'
+    volumes:
+      - ./config/nginx/ssl:/etc/nginx/certs
+      - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - consul-template

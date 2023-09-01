@@ -98,3 +98,38 @@ resource "vault_pki_secret_backend_role" "inter-role" {
   max_ttl          = 6000
   generate_lease   = true
 }
+
+# Creation of pki policy, revoke certificate and delete old expired certificate
+resource "vault_policy" "policy" {
+  name   = "pki-policy"
+  policy = <<EOT
+path "pki_intermediate/issue/*" {
+  capabilities = ["create", "update"]
+}
+
+path "pki_intermediate/certs" {
+  capabilities = ["list"]
+}
+
+path "pki_intermediate/revoke" {
+  capabilities = ["create", "update"]
+}
+
+path "pki_intermediate/tidy" {
+  capabilities = ["create", "update"]
+}
+
+path "pki_root/cert/ca" {
+  capabilities = ["read"]
+}
+
+path "auth/token/renew" {
+  capabilities = ["update"]
+}
+
+path "auth/token/renew-self" {
+  capabilities = ["update"]
+} 
+
+EOT
+}
