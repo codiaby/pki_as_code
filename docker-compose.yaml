@@ -1,9 +1,14 @@
 services:
   vault:
     image: hashicorp/vault:1.13.3
+    command: ["vault", "server", "-config", "vault/config/vault-server.hcl"]
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: poiuytreza
+      VAULT_ADDR: 'http://127.0.0.1:8200'
+      VAULT_SKIP_VERIFY: 'true'
     ports:
-      - "8080:8200"
+      - "8200:8200"
     cap_add:
       - IPC_LOCK
+    volumes:
+      - ./config/vault/config/vault-server.hcl:/vault/config/vault-server.hcl
+      - ./data:/vault-data
